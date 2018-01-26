@@ -103,76 +103,76 @@ int main(int argc, char **argv)
 
   if (!sSfM_Gps_Filename_In.empty())
   {
-	  std::cout << "Reading GPS file " << sSfM_Gps_Filename_In << std::endl;
+    std::cout << "Reading GPS file " << sSfM_Gps_Filename_In << std::endl;
 
-	  // Read GPS coordinates file
-	  std::ifstream gpsFile(sSfM_Gps_Filename_In);
-	  std::map<std::string, Vec3> knownPositions;
-	  std::string image_name;
-	  double coords[3];
-	  while (gpsFile >> image_name >> coords[0] >> coords[1] >> coords[2])
-	  {
-		  Vec3 v(coords[0], coords[1], coords[2]);
-		  knownPositions[image_name] = v;
-	  }
+    // Read GPS coordinates file
+    std::ifstream gpsFile(sSfM_Gps_Filename_In);
+    std::map<std::string, Vec3> knownPositions;
+    std::string image_name;
+    double coords[3];
+    while (gpsFile >> image_name >> coords[0] >> coords[1] >> coords[2])
+    {
+      Vec3 v(coords[0], coords[1], coords[2]);
+      knownPositions[image_name] = v;
+    }
 
-	  for (const auto & view_it : sfm_data.GetViews())
-	  {
-		  if (!sfm_data.IsPoseAndIntrinsicDefined(view_it.second.get()))
-			  continue;
+    for (const auto & view_it : sfm_data.GetViews())
+    {
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view_it.second.get()))
+        continue;
 
-		  // Check existence of GPS coordinates
-		  auto it = knownPositions.find(view_it.second->s_Img_path);
-		  if (it != knownPositions.end())
-		  {
-			  vec_gps_center.push_back(it->second);
+      // Check existence of GPS coordinates
+      auto it = knownPositions.find(view_it.second->s_Img_path);
+      if (it != knownPositions.end())
+      {
+        vec_gps_center.push_back(it->second);
 
-			  const openMVG::geometry::Pose3 pose(sfm_data.GetPoseOrDie(view_it.second.get()));
-			  vec_sfm_center.push_back(pose.center());
-		  }
-		  else
-		  {
-			  std::cerr
-				  << "\nCamera not found in GPS file: " << view_it.second->s_Img_path << std::endl;
-		  }
-	  }
+        const openMVG::geometry::Pose3 pose(sfm_data.GetPoseOrDie(view_it.second.get()));
+        vec_sfm_center.push_back(pose.center());
+      }
+      else
+      {
+        std::cerr
+          << "\nCamera not found in GPS file: " << view_it.second->s_Img_path << std::endl;
+      }
+    }
 
   }
   else
   {
-	  // Init the EXIF reader (will be used for GPS data reading)
-	  std::unique_ptr<Exif_IO> exifReader(new Exif_IO_EasyExif);
-	  if (!exifReader)
-	  {
-		  std::cerr << "Cannot instantiate the EXIF metadata reader." << std::endl;
-		  return EXIT_FAILURE;
-	  }
+    // Init the EXIF reader (will be used for GPS data reading)
+    std::unique_ptr<Exif_IO> exifReader(new Exif_IO_EasyExif);
+    if (!exifReader)
+    {
+      std::cerr << "Cannot instantiate the EXIF metadata reader." << std::endl;
+      return EXIT_FAILURE;
+    }
 
-	  for (const auto & view_it : sfm_data.GetViews())
-	  {
-		  if (!sfm_data.IsPoseAndIntrinsicDefined(view_it.second.get()))
-			  continue;
+    for (const auto & view_it : sfm_data.GetViews())
+    {
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view_it.second.get()))
+        continue;
 
-		  const std::string view_filename =
-			  stlplus::create_filespec(sfm_data.s_root_path, view_it.second->s_Img_path);
+      const std::string view_filename =
+        stlplus::create_filespec(sfm_data.s_root_path, view_it.second->s_Img_path);
 
-		  // Try to parse EXIF metada & check existence of EXIF data
-		  if (!(exifReader->open(view_filename) &&
-			  exifReader->doesHaveExifInfo()))
-			  continue;
+      // Try to parse EXIF metada & check existence of EXIF data
+      if (!(exifReader->open(view_filename) &&
+        exifReader->doesHaveExifInfo()))
+        continue;
 
-		  // Check existence of GPS coordinates
-		  double latitude, longitude, altitude;
-		  if (exifReader->GPSLatitude(&latitude) &&
-			  exifReader->GPSLongitude(&longitude) &&
-			  exifReader->GPSAltitude(&altitude))
-		  {
-			  // Add ECEF XYZ position to the GPS position array
-			  vec_gps_center.push_back(lla_to_ecef(latitude, longitude, altitude));
-			  const openMVG::geometry::Pose3 pose(sfm_data.GetPoseOrDie(view_it.second.get()));
-			  vec_sfm_center.push_back(pose.center());
-		  }
-	  }
+      // Check existence of GPS coordinates
+      double latitude, longitude, altitude;
+      if (exifReader->GPSLatitude(&latitude) &&
+        exifReader->GPSLongitude(&longitude) &&
+        exifReader->GPSAltitude(&altitude))
+      {
+        // Add ECEF XYZ position to the GPS position array
+        vec_gps_center.push_back(lla_to_ecef(latitude, longitude, altitude));
+        const openMVG::geometry::Pose3 pose(sfm_data.GetPoseOrDie(view_it.second.get()));
+        vec_sfm_center.push_back(pose.center());
+      }
+    }
   }
 
   if ( vec_sfm_center.empty() )
