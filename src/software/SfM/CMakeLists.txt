@@ -146,7 +146,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ChangeLocalOrigin
   openMVG_sfm
   stlplus
   )
-
+  
 # Installation rules
 SET_PROPERTY(TARGET openMVG_main_IncrementalSfM PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_IncrementalSfM DESTINATION bin/)
@@ -225,6 +225,13 @@ TARGET_LINK_LIBRARIES(openMVG_main_ExportUndistortedImages
   stlplus
   )
 
+add_executable(openMVG_main_ControlPointsRegistration main_ControlPointsRegistration.cpp)
+target_link_libraries(openMVG_main_ControlPointsRegistration
+  openMVG_system
+  openMVG_features
+  openMVG_sfm
+  stlplus)
+  
 # installation rules
 SET_PROPERTY(TARGET openMVG_main_exportKeypoints PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_exportKeypoints DESTINATION bin/)
@@ -234,6 +241,8 @@ SET_PROPERTY(TARGET openMVG_main_exportTracks PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_exportTracks DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_ExportUndistortedImages PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ExportUndistortedImages DESTINATION bin/)
+set_property(TARGET openMVG_main_ControlPointsRegistration PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_ControlPointsRegistration DESTINATION bin/)
 
 ###
 # SfM export to X
