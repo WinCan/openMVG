@@ -131,12 +131,22 @@ int main(int argc, char **argv)
   outfile << "<cameras>\n";
   for (const auto& view : sfm_data.GetViews())
   {
-    const openMVG::geometry::Pose3 poseMVG(sfm_data.GetPoseOrDie(view.second.get()));
-    auto mat34 = poseMVG.inverse().asMatrix();
+    if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get()))
+    {
+      const openMVG::geometry::Pose3 poseMVG(sfm_data.GetPoseOrDie(view.second.get()));
+      auto mat34 = poseMVG.inverse().asMatrix();
 
-    outfile << "<camera id=\"" << view.first << "\" label=\"" << view.second->s_Img_path << "\" sensor_id=\"" << view.second->id_intrinsic << "\" enabled=\"1\">\n";
-    outfile << "<transform>" << mat34 << " 0.0 0.0 0.0 1.0</transform>\n";
-    outfile << "</camera>\n";
+      outfile << "<camera id=\"" << view.first << "\" label=\"" << view.second->s_Img_path << "\" sensor_id=\"" << view.second->id_intrinsic << "\" enabled=\"1\">\n";
+      outfile << "<transform>" << mat34 << " 0.0 0.0 0.0 1.0</transform>\n";
+      outfile << "</camera>\n";
+    }
+    else
+    {
+      std::cout << "No pose defined for camera " << view.first << " (" << view.second->s_Img_path  << ")" << std::endl;
+
+      outfile << "<camera id=\"" << view.first << "\" label=\"" << view.second->s_Img_path << "\" sensor_id=\"" << view.second->id_intrinsic << "\" enabled=\"0\">\n";
+      outfile << "</camera>\n";
+    }
   }
   outfile << "</cameras>\n";
 
